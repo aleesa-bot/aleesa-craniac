@@ -112,9 +112,9 @@ if (defined $logfile) {
 }
 
 # по-умолчанию, демонизируемся, если явно не указано, что этого делать не надо
-if (defined ($c->{daemonize}) && $c->{daemonize}) {
+if (defined ($C->{daemonize}) && $C->{daemonize}) {
 	daemonize ();
-} elsif ( ! defined ($c->{daemonize})) {
+} elsif ( ! defined ($C->{daemonize})) {
 	daemonize ();
 }
 
