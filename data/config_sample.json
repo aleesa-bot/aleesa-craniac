@@ -19,7 +19,7 @@
 
 # logs goes there
     "log" : "/var/log/aleesa-craniac/aleesa-craniac.log",
-    "loglevel": "notice",
+    "loglevel": "info",
 
 # ditto
     "pid" : "/var/run/aleesa-craniac/aleesa-craniac.pid"

@@ -19,11 +19,11 @@ use English qw ( -no_match_vars );
 # Модули для работы приложения
 use Digest::SHA qw (sha1_base64);
 use Hailo;
-use Log::Any qw ($log);
+use Mojo::IOLoop;
+use Mojo::Log;
 # Чтобы "уж точно" использовать hiredis-биндинги, загрузим этот модуль перед Mojo::Redis
 use Protocol::Redis::XS;
 use Mojo::Redis;
-use Mojo::IOLoop;
 use Math::Random::Secure qw (irand);
 use Text::Fuzzy qw (distance_edits);
 
@@ -39,6 +39,22 @@ sub brains (@);
 sub RunCraniac ();
 
 my $c = LoadConf ();
+my $loglevel = $c->{'loglevel'} // 'info';
+my $logfile;
+my $log;
+
+if (defined $c->{'log'}) {
+	$logfile = $c->{'log'};
+} elsif (defined $c->{'debug_log'}) {
+	$logfile = $c->{'debug_log'};
+}
+
+if (defined $logfile) {
+	$log = Mojo::Log->new (path => $logfile, level => $loglevel);
+} else {
+	$log = Mojo::Log->new (path => '/dev/null', level => 'fatal');
+}
+
 my $hailo;
 
 sub RandomCommonPhrase () {
@@ -241,13 +257,13 @@ my $parse_message = sub {
 
 # Main loop, он же event loop
 sub RunCraniac () {
-	$log->notice ("[NOTICE] Connecting to $c->{server}, $c->{port}");
+	$log->info ("[INFO] Connecting to $c->{server}, $c->{port}");
 
 	my $redis = Mojo::Redis->new (
 		sprintf 'redis://%s:%s/1', $c->{server}, $c->{port}
 	);
 
-	$log->notice ('[NOTICE] Registering connection-event callback');
+	$log->info ('[INFO] Registering connection-event callback');
 
 	$redis->on (
 		connection => sub {
@@ -270,10 +286,10 @@ sub RunCraniac () {
 
 	my $pubsub = $redis->pubsub;
 	my $sub;
-	$log->notice ('[NOTICE] Subscribing to redis channels');
+	$log->info ('[INFO] Subscribing to redis channels');
 
 	foreach my $channel (@{$c->{channels}}) {
-		$log->info ("[INFO] Subscribing to $channel");
+		$log->debug ("[DEBUG] Subscribing to $channel");
 
 		$sub->{$channel} = $pubsub->json ($channel)->listen (
 			$channel => sub { $parse_message->(@_); }

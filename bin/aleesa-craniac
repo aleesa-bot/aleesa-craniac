@@ -29,9 +29,7 @@ no Cwd;
 use Cwd::utf8 qw (chdir abs_path);
 use File::Basename qw (basename dirname);
 use File::Path qw (make_path);
-use Log::Any qw ($log);
-use Log::Any::Adapter;
-use Log::Any::For::Std;
+use Mojo::Log;
 use POSIX qw (setgid setuid setsid);
 use Conf qw (LoadConf);
 use Craniac qw (RunCraniac);
@@ -47,6 +45,7 @@ my $piddir = '/var/run/' . basename (abs_path ($PROGRAM_NAME));
 my $C = LoadConf ();
 my $loglevel = $C->{'loglevel'} // 'notice';
 my $logfile;
+my $log;
 
 if (defined $C->{'log'}) {
 	$logfile = $C->{'log'};
@@ -78,10 +77,10 @@ if ($UID == 0) {
 
 		unless (-d $logdir) {
 			make_path (
-					$logdir, {
-							uid   => $uid,
-							group => $gid
-					}
+				$logdir, {
+					uid   => $uid,
+					group => $gid
+				}
 			) or die "Unable to create $logdir: $OS_ERROR\n";
 		}
 	}
@@ -94,21 +93,9 @@ if ($UID == 0) {
 }
 
 if (defined $logfile) {
-	Log::Any::Adapter->set ('File', $logfile, log_level => $loglevel);
-
-	# Some annoying CHI logging events come with category set to CHI::Driver and log_level set to debug.
-	# Until we use start using Log::Any native features and set whole loglevel accordingly, lets lower
-	# verbosity paticulary for CHI.
-	Log::Any::Adapter->set (
-		{
-			category => 'CHI::Driver'
-		},
-		'File',
-		$logfile,
-		log_level => 'warn'
-	);
+	$log = Mojo::Log->new (path => $logfile, level => $loglevel);
 } else {
-	Log::Any::Adapter->set ('File', '/dev/null');
+	$log = Mojo::Log->new (path => '/dev/null', level => 'fatal');
 }
 
 # по-умолчанию, демонизируемся, если явно не указано, что этого делать не надо
@@ -160,7 +147,6 @@ sub daemonize {
 	__fork ();
 	POSIX::setsid ();
 	open STDIN, '<', '/dev/null';                    ## no critic (InputOutput::RequireCheckedSyscalls, InputOutput::RequireCheckedOpen)
-	# we handle STDOUT && STDERR via Log::Any::For::Std, so do not close them explicitly
 	#open STDOUT, '>', '/dev/null';                   ## no critic (InputOutput::RequireCheckedSyscalls, InputOutput::RequireCheckedOpen)
 	#open STDERR, '>', '/dev/null';                   ## no critic (InputOutput::RequireCheckedSyscalls, InputOutput::RequireCheckedOpen)
 	__fork ();
