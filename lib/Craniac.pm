@@ -142,96 +142,125 @@ my $parse_message = sub {
 	my $reply;
 
 	# Если $m->{misc}->{answer} не существует, то проставим его как 1, предполагаем, что по-умолчанию ответ от нас
-	# всё-таки ожидают. Уточним ниже, по содержимому фразы и по режиму беседы (private или public).
+	# всё-таки ожидают. Если что - уточним ниже.
 	if (defined $m->{misc}) {
 		unless (defined $m->{misc}->{answer}) {
 			$m->{misc}->{answer} = 1;
 		}
+
+		unless (defined $m->{misc}->{csign}) {
+			$m->{misc}->{csign} = '!';
+		}
+
+		# TODO: не проставлять дефолтный ник!
+		unless (defined $m->{misc}->{bot_nick}) {
+			$m->{misc}->{bot_nick} = 'aleesa';
+		}
 	} else {
 		$m->{misc}->{answer} = 1;
+		$m->{misc}->{csign} = '!';
+		$m->{misc}->{bot_nick} = 'aleesa';
 	}
 
 	if (defined $m->{misc}->{bot_nick}) {
-		# Заменим обращение к боту по нику с окружающими запятыми и пробелами на пробел
+		# Если нам сообщили ник бота, попробуем вымарать его из оригинального текста сообщения, в большинстве случаев он
+		# нам не интересн.
 		$phrase =~ s/\s*\,?\s*($m->{misc}->{bot_nick})\s*\,?\s*/ /gui;
-	}
 
-	if ($m->{mode} eq 'private') {
-		$phrase =~ s/^\s*(вот\s+)?скажи(\s*мне)?\s*//gui;
-		$phrase =~ s/\s*(,)?\s*а\s*\?$/?/gui;
-
-		if ($phrase =~ /^ *кто +все +эти +люди *\?$/ui) {
-			$reply = 'Какие "люди"? Мы здесь вдвоём, только ты и я.';
-		} elsif ($phrase =~ /^ *кто +я *\?$/ui) {
-			$reply = 'Где?';
-		} elsif ($phrase =~ /^ *кто +(здесь|тут) *\?$/ui) {
-			$reply = 'Ты да я, да мы с тобой.';
+		# В ключевых фразах можно обратиться с некоторыми командами к боту по нику, не используя символ команды
+		if ($m->{message} =~ /^\s*\Q;m->{misc}->{bot_nick}\E\s*;/ui) {
+			$reply = 'Чего?';
+		} elsif ($m->{message} =~ /^(\Q$m->{misc}->{csign}\E|\Q$m->{misc}->{bot_nick}\E\s*\,?\s+)pong\.?\s*$/i) {
+			$reply = 'Wat?';
+		} elsif ($m->{message} =~ /^(\Q$m->{misc}->{csign}\E|\Q$m->{misc}->{bot_nick}\E\s*\,?\s+)пин(г|х)\.?\s*$/ui) {
+			$reply = 'Понг.';
+		} elsif ($m->{message} =~ /^(\Q$m->{misc}->{csign}\E|\Q$m->{misc}->{bot_nick}\E\s*\,?\s+)пон(г|х)\.?\s*$/ui) {
+			$reply = 'Шта?';
+		} elsif ($m->{message} =~ /^(\Q$m->{misc}->{csign}\E|\Q$m->{misc}->{bot_nick}\E\s*\,?\s+)(хэлп|halp)\s*$/ui) {
+			$reply = 'HALP!!!11';
 		}
+	} else {
+		# Если нам не сообщили ник бота, то ищем команды, используя символ команды
+		if ($m->{message} =~ /^\Q$m->{misc}->{csign}\Epong\.?\s*$/i) {
+			$reply = 'Wat?';
+		} elsif ($m->{message} =~ /^\Q$m->{misc}->{csign}\Eпин(г|х)\.?\s*$/ui) {
+			$reply = 'Понг.';
+		} elsif ($m->{message} =~ /^\Q$m->{misc}->{csign}\Eпон(г|х)\.?\s*$/ui) {
+			$reply = 'Шта?';
+		} elsif ($m->{message} =~ /^\Q$m->{misc}->{csign}\E(хэлп|halp)\s*$/ui) {
+			$reply = 'HALP!!!11';
 
-		# TODO: дописать запрос в webapp, для easter egg-ов, либо делать это на уровне aleesa-misc
 
-		if (defined ($reply) && $m->{misc}->{answer}) {
-			$self->json ($send_to)->notify (
-				$send_to => {
-					from    => 'craniac',
-					userid  => $userid,
-					chatid  => $chatid,
-					plugin  => $m->{plugin},
-					message => $reply
-				}
-			);
-
-			return;
-		}
-	} elsif ($m->{mode} eq 'public') {
-		$phrase =~ s/^\s*(вот\s+)?скажи(\s*мне)?\s*//gui;
-		$phrase =~ s/\s*(,)?\s*а\s*\?$/?/gui;
-
-		if ($phrase =~ /^ *кто +все +эти +люди *\?$/ui) {
-			$reply = 'Кто здесь?';
-		} elsif ($phrase =~ /^ *кто +я *?$/ui){
-			$reply = 'Где?';
-		} elsif ($phrase =~ /^ *кто +(здесь|тут) *\?$/ui) {
-			$reply = 'Здесь все: Никита, Стас, Гена, Турбо и Дюша Метёлкин.';
-		}
-
-		if (defined ($reply) && $m->{misc}->{answer}) {
-			$self->json ($send_to)->notify (
-				$send_to => {
-					from    => 'craniac',
-					userid  => $userid,
-					chatid  => $chatid,
-					plugin  => $m->{plugin},
-					message => $reply
-				}
-			);
-
-			return;
 		}
 	}
 
-	# Попадаем сюда только если входящая фраза не распознана ранее как ключевая. 
-	if ($m->{misc}->{answer}) {
-		# Пытаемся что-то генерировать, если фраза длиннее 3-х букв
-		if (length ($m->{message}) > 3) {
-			if (brains ($chatid, 1)) {
-				$reply = $hailo->{$chatid}->learn_reply ($m->{message});
+	# Поищем в тексте входящего сообщения команды общего плана, с символом команды.
+	unless (defined $reply) {
+ 		if ($m->{message} =~ /^\Q$m->{misc}->{csign}\E(kde|кде)\s*$/ui) {
+			my @phrases = (
+				'Нет, я не буду поднимать вам плазму.',
+				'Повторяйте эту мантру по утрам не менее 5 раз: "Плазма не падает." И, возможно, она перестанет у вас падать.',
+				'Плазма не падает, она просто выходит отдохнуть.',
+				'Плазма это не агрегатное состояние, это суперпозиция. Во время работы она находится сразу в жидком, мягком и тёплом состояниях.',
+			);
 
-				# Если из реактора вернулся undef выдаём "общую" фразу из словаря
-				unless (defined $reply) {
-					$reply = RandomCommonPhrase ();
+			$reply = $phrases[irand ($#phrases + 1)];
+		} elsif ($m->{message} =~ /^\Q$m->{misc}->{csign}\E(coin|монетка)$/ui) {
+			if (rand (101) < 0.016) {
+				$reply = 'ребро';
+			} else {
+				if (irand (2) == 0) {
+					if (irand (2) == 0) {
+						$reply = 'орёл';
+					} else {
+						$reply = 'аверс';
+					}
 				} else {
-					# Если из реактора вернулась пустота выдаём "общую" фразу из словаря
-					if ($reply eq '') {
-						$reply = RandomCommonPhrase ();
-					}
-
-					# Если сгенерированная фраза слишком похожа на начальную - выдаём "общую" фразу из словаря
-					if (fmatch (lc ($m->{message}), lc ($reply))) {
-						$reply = RandomCommonPhrase ();
+					if (irand (2) == 0) {
+						$reply = 'решка';
+					} else {
+						$reply = 'реверс';
 					}
 				}
+			}
+		} elsif ($m->{message} =~ /^\Q$m->{misc}->{csign}\E(roll|dice|кости')$/ui) {
+			$reply = sprintf 'На первой кости выпало %d, а на второй — %d.', irand (6) + 1, irand (6) + 1;
+		} elsif ($m->{message} =~ /^\Q$m->{misc}->{csign}\E(ver|version|версия)$/ui) {
+			$reply = 'Версия:  Четыре.Технологическое_превью';
+		}
+	}
 
+	# У нас уже есть чего ответить, нам попалась известная фраза, на которую одинаковый ответ, независимо от типа
+	# общения - публичного или приватного.
+	if (defined $reply) {
+		if ($m->{misc}->{answer}) {
+			$self->json ($send_to)->notify (
+				$send_to => {
+					from    => 'craniac',
+					userid  => $userid,
+					chatid  => $chatid,
+					plugin  => $m->{plugin},
+					message => $reply
+				}
+			);
+		}
+	} else {
+		# Пока что нам нечего ответить, известных фраз не нашлось. Ищем дальше, на сей раз фразы, зависящие от режима
+		# общения - приватного ли публичного.
+		if ($m->{mode} eq 'private') {
+			$phrase =~ s/^\s*(вот\s+)?скажи(\s*мне)?\s*//gui;
+			$phrase =~ s/\s*(,)?\s*а\s*\?$/?/gui;
+
+			if ($phrase =~ /^\s*кто\s+все\s+эти\s+люди\s*\?\s*$/ui) {
+				$reply = 'Какие "люди"? Мы здесь вдвоём, только ты и я.';
+			} elsif ($phrase =~ /^\s*кто\s+я\s*\?\s*$/ui) {
+				$reply = 'Где?';
+			} elsif ($phrase =~ /^\s*кто\s+(здесь|тут)\s*\?\s*$/ui) {
+				$reply = 'Ты да я, да мы с тобой.';
+			}
+
+			# TODO: дописать запрос в webapp, для easter egg-ов, либо делать это на уровне aleesa-misc
+			if (defined ($reply) && $m->{misc}->{answer}) {
 				$self->json ($send_to)->notify (
 					$send_to => {
 						from    => 'craniac',
@@ -241,13 +270,76 @@ my $parse_message = sub {
 						message => $reply
 					}
 				);
+
+				return;
+			}
+		} elsif ($m->{mode} eq 'public') {
+			$phrase =~ s/^\s*(вот\s+)?скажи(\s*мне)?\s*//gui;
+			$phrase =~ s/\s*(,)?\s*а\s*\?$/?/gui;
+
+			if ($phrase =~ /^\s*кто\s+все\s+эти\s+люди\s*\?\s*$/ui) {
+				$reply = 'Кто здесь?';
+			} elsif ($phrase =~ /^\s*кто\s+я\s*?\s*$/ui){
+				$reply = 'Где?';
+			} elsif ($phrase =~ /^\s*кто\s+(здесь|тут)\s*\?\s*$/ui) {
+				$reply = 'Здесь все: Никита, Стас, Гена, Турбо и Дюша Метёлкин.';
+			}
+
+			if (defined ($reply) && $m->{misc}->{answer}) {
+				$self->json ($send_to)->notify (
+					$send_to => {
+						from    => 'craniac',
+						userid  => $userid,
+						chatid  => $chatid,
+						plugin  => $m->{plugin},
+						message => $reply
+					}
+				);
+
+				return;
 			}
 		}
-	} else {
-		# пытаемся что-то запоминать, если фраза длиннее 3-х букв
-		if (length ($m->{message}) > 3) {
-			if (brains ($chatid, 1)) {
-				$hailo->{$chatid}->learn ($m->{message});
+
+		# Попадаем сюда только если входящая фраза не распознана ранее как ключевая. 
+		if ($m->{misc}->{answer}) {
+			# Пытаемся что-то генерировать, если фраза длиннее 3-х букв
+			if (length ($m->{message}) > 3) {
+				# Lazy brain init
+				if (brains ($chatid, 1)) {
+					$reply = $hailo->{$chatid}->learn_reply ($m->{message});
+
+					# Если из реактора вернулся undef выдаём "общую" фразу из словаря
+					unless (defined $reply) {
+						$reply = RandomCommonPhrase ();
+					} else {
+						# Если из реактора вернулась пустота выдаём "общую" фразу из словаря
+						if ($reply eq '') {
+							$reply = RandomCommonPhrase ();
+						}
+
+						# Если сгенерированная фраза слишком похожа на начальную - выдаём "общую" фразу из словаря
+						if (fmatch (lc ($m->{message}), lc ($reply))) {
+							$reply = RandomCommonPhrase ();
+						}
+					}
+
+					$self->json ($send_to)->notify (
+						$send_to => {
+							from    => 'craniac',
+							userid  => $userid,
+							chatid  => $chatid,
+							plugin  => $m->{plugin},
+							message => $reply
+						}
+					);
+				}
+			}
+		} else {
+			# пытаемся что-то запоминать, если фраза длиннее 3-х букв
+			if (length ($m->{message}) > 3) {
+				if (brains ($chatid, 1)) {
+					$hailo->{$chatid}->learn ($m->{message});
+				}
 			}
 		}
 	}
