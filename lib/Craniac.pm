@@ -115,17 +115,19 @@ sub brains (@) {
 
 		my $brainname = sprintf '%s/%s.sqlite', $c->{braindir}, $cid;
 
-		$hailo->{$chatid} = Hailo->new (
-			brain => $brainname,
-			order => 3
-		);
+		$hailo->{$chatid} = eval {
+			Hailo->new (
+				brain => $brainname,
+				order => 3
+			);
+		};
 
-		unless (defined $hailo->{$chatid}) {
+		if (defined $hailo->{$chatid}) {
+			$log->info (sprintf 'Lazy init brain: %s', $brainname);
+		} else {
 			$log->warn ($EVAL_ERROR);
 			return 0;
 		}
-
-		$log->info (sprintf 'Lazy init brain: %s', $brainname);
 	}
 
 	return 1;
