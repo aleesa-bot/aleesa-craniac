@@ -170,6 +170,8 @@ my $parse_message = sub {
 		# В ключевых фразах можно обратиться с некоторыми командами к боту по нику, не используя символ команды
 		if ($m->{message} =~ /^\s*\Q;m->{misc}->{bot_nick}\E\s*;/ui) {
 			$reply = 'Чего?';
+		} elsif ($m->{message} =~ /^(\Q$m->{misc}->{csign}\E|\Q$m->{misc}->{bot_nick}\E\s*\,?\s+)ping\.?\s*$/i) {
+			$reply = 'Pong.';
 		} elsif ($m->{message} =~ /^(\Q$m->{misc}->{csign}\E|\Q$m->{misc}->{bot_nick}\E\s*\,?\s+)pong\.?\s*$/i) {
 			$reply = 'Wat?';
 		} elsif ($m->{message} =~ /^(\Q$m->{misc}->{csign}\E|\Q$m->{misc}->{bot_nick}\E\s*\,?\s+)пин(г|х)\.?\s*$/ui) {
@@ -181,7 +183,9 @@ my $parse_message = sub {
 		}
 	} else {
 		# Если нам не сообщили ник бота, то ищем команды, используя символ команды
-		if ($m->{message} =~ /^\Q$m->{misc}->{csign}\Epong\.?\s*$/i) {
+		if ($m->{message} =~ /^\Q$m->{misc}->{csign}\Eping\.?\s*$/ui) {
+			$reply = 'Pong.';
+		} elsif ($m->{message} =~ /^\Q$m->{misc}->{csign}\Epong\.?\s*$/i) {
 			$reply = 'Wat?';
 		} elsif ($m->{message} =~ /^\Q$m->{misc}->{csign}\Eпин(г|х)\.?\s*$/ui) {
 			$reply = 'Понг.';
@@ -189,8 +193,6 @@ my $parse_message = sub {
 			$reply = 'Шта?';
 		} elsif ($m->{message} =~ /^\Q$m->{misc}->{csign}\E(хэлп|halp)\s*$/ui) {
 			$reply = 'HALP!!!11';
-
-
 		}
 	}
 
