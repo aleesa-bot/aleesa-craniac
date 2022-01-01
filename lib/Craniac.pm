@@ -20,6 +20,7 @@ use English qw ( -no_match_vars );
 use Digest::SHA qw (sha1_base64);
 use Hailo;
 use Mojo::IOLoop;
+use Mojo::IOLoop::Signal;
 use Mojo::Log;
 # Чтобы "уж точно" использовать hiredis-биндинги, загрузим этот модуль перед Mojo::Redis
 use Protocol::Redis::XS;
@@ -351,6 +352,18 @@ my $parse_message = sub {
 	return;
 };
 
+my $__signal_handler = sub {
+	my ($self, $name) = @_;
+	$log->info ("[INFO] Caught a signal $name");
+
+	if (defined $main::pidfile && -f $main::pidfile) {
+		unlink $main::pidfile;
+	}
+
+	exit 0;
+};
+
+
 # Main loop, он же event loop
 sub RunCraniac () {
 	$log->info ("[INFO] Connecting to $c->{server}, $c->{port}");
@@ -391,6 +404,11 @@ sub RunCraniac () {
 			$channel => sub { $parse_message->(@_); }
 		);
 	}
+
+	Mojo::IOLoop::Signal->on (
+		TERM => $__signal_handler,
+		INT  => $__signal_handler
+	);
 
 	do { Mojo::IOLoop->start } until Mojo::IOLoop->is_running;
 	return;
