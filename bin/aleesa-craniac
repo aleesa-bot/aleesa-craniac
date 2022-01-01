@@ -11,7 +11,7 @@ use version; our $VERSION = qw (1.0);
 
 my $workdir;
 
-# before we run, change working dir
+# До фактического запуска логики программы, сменим рабочий каталог, чтобы подцепить либы
 BEGIN {
 	use Cwd qw (chdir abs_path);
 	my @CWD = split /\//xms, abs_path ($PROGRAM_NAME);
@@ -53,7 +53,8 @@ if (defined $C->{'log'}) {
 	$logfile = $C->{'debug_log'};
 }
 
-# if we run under root, create pid dir and set correct owner for it, same for debug log if it is defined
+# Если мы запускаемся под рутом, то попробуем создать необходимые служебные каталоги и простать на них корректных
+# владельца и права
 if ($UID == 0) {
 	my $user = $C->{user};
 
@@ -85,7 +86,7 @@ if ($UID == 0) {
 		}
 	}
 
-# drop privs
+	# Переключаемся на "рабочего" пользователя и сбрасываем привилегии.
 	setgid ($gid) or die "Unable to switch to group of $user($OS_ERROR)\n";
 	setuid ($uid) or die "Unable to switch to account $user($OS_ERROR)\n";
 } else {
@@ -98,14 +99,14 @@ if (defined $logfile) {
 	$log = Mojo::Log->new (path => '/dev/null', level => 'fatal');
 }
 
-# по-умолчанию, демонизируемся, если явно не указано, что этого делать не надо
+# По-умолчанию, демонизируемся, если явно не указано, что этого делать не надо
 if (defined ($C->{daemonize}) && $C->{daemonize}) {
 	daemonize ();
 } elsif ( ! defined ($C->{daemonize})) {
 	daemonize ();
 }
 
-# write pidfile
+# Запишем pid-файл
 my $apath = abs_path $PROGRAM_NAME;
 
 unless (defined $apath) {
@@ -128,13 +129,15 @@ print {$MYPID} $PID or do {
 
 close $MYPID;                                        ## no critic (InputOutput::RequireCheckedSyscalls
 
+# При наличии хака в лице Mojo::IOLoop::Signal в Misc.pm, установка хэндлера в этом месте - это фактически
+# подстраховка на случай ядерной войны.
 local $SIG{INT}  = \&__signal_handler;
 local $SIG{TERM} = \&__signal_handler;
 
-# set correct proctitle
+# Поставим правильное имя процесса в proctitle
 $PROGRAM_NAME = abs_path $PROGRAM_NAME;              ## no critic (Variables::RequireLocalizedPunctuationVars)
 
-# run main app, at last
+# И запустим уже наш сервис
 RunCraniac ();
 
 if (-f $pidfile) {
@@ -147,8 +150,6 @@ sub daemonize {
 	__fork ();
 	POSIX::setsid ();
 	open STDIN, '<', '/dev/null';                    ## no critic (InputOutput::RequireCheckedSyscalls, InputOutput::RequireCheckedOpen)
-	#open STDOUT, '>', '/dev/null';                   ## no critic (InputOutput::RequireCheckedSyscalls, InputOutput::RequireCheckedOpen)
-	#open STDERR, '>', '/dev/null';                   ## no critic (InputOutput::RequireCheckedSyscalls, InputOutput::RequireCheckedOpen)
 	__fork ();
 	umask 0;
 	return;
