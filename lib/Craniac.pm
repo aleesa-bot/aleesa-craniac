@@ -29,6 +29,8 @@ use Math::Random::Secure qw (irand);
 use Text::Fuzzy qw (distance_edits);
 
 use Conf qw (LoadConf);
+use Craniac::Lat qw (Lat);
+
 use version; our $VERSION = qw (1.0);
 use Exporter qw (import);
 our @EXPORT_OK = qw (RunCraniac);
@@ -247,6 +249,8 @@ my $parse_message = sub {
 			$reply = sprintf 'На первой кости выпало %d, а на второй — %d.', irand (6) + 1, irand (6) + 1;
 		} elsif ($m->{message} =~ /^\Q$m->{misc}->{csign}\E(ver|version|версия)$/ui) {
 			$reply = 'Версия:  Четыре.Технологическое_превью';
+		} elsif ($m->{message} =~ /^\Q$m->{misc}->{csign}\E(lat|лат)\s*$/ui) {
+			$reply = Lat ();
 		}
 	}
 

@@ -1,3 +1,4 @@
+requires 'Carp',                 '==1.50';
 requires 'Cwd',                  '0';
 requires 'Cwd::utf8',            '==0.011';
 requires 'Digest::SHA',          '==6.02';

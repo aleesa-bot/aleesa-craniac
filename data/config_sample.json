@@ -1,12 +1,12 @@
 {
     "server" : "redis",
     "port" : "6379",
-    "channels": [
+    "channels" : [
         "craniac"
     ],
 
     # should we fork() and become unix daemon?
-    "daemonize": 1,
+    "daemonize" : 1,
 
     # caches and other data goes there
     "cachedir" : "data/cache",
@@ -17,11 +17,16 @@
 
     # logs goes there
     "log" : "/var/log/aleesa-craniac/aleesa-craniac.log",
-    "loglevel": "info",
+    "loglevel" : "info",
 
     # ditto
     "pid" : "/var/run/aleesa-craniac/aleesa-craniac.pid",
 
     # maximal amount of message forwardings, to avoid endless loops
-    "forwards_max" : 5
+    "forwards_max" : 5,
+
+    "lat" : {
+        "brain" : "data/lat/brain.sqlite",
+        "src" : "data/lat.txt"
+    }
 }
