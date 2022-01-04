@@ -93,3 +93,4 @@ lib_sections    = NAME | VERSION | DESCRIPTION | AUTHOR | LICENSE AND COPYRIGHT
 [-ControlStructures::ProhibitDeepNests]
 # Have to use it, so fuckoff
 
+[-Variables::ProhibitPackageVars]

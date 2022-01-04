@@ -41,6 +41,7 @@ sub RunCraniac ();
 
 my $c = LoadConf ();
 my $loglevel = $c->{'loglevel'} // 'info';
+my $fwd_cnt = $c->{'forward_max'} // 5;
 my $logfile;
 my $log;
 
@@ -107,14 +108,16 @@ sub brains (@) {
 
 	unless (defined $hailo->{$chatid}) {
 		my $cid = $chatid;
+		my $brainname;
 
 		# Костыль, чтобы не портировать данные из телеграммных мозгов
 		unless ($telegram) {
 			$cid = utf2sha1 ($chatid);
 			$cid =~ s/\//-/xmsg;
+			$brainname = sprintf '%s/%s.sqlite', $c->{braindir}, $cid;
+		} else {
+			$brainname = sprintf '%s/%s.brain.sqlite', $c->{braindir}, $cid;
 		}
-
-		my $brainname = sprintf '%s/%s.sqlite', $c->{braindir}, $cid;
 
 		$hailo->{$chatid} = eval {
 			Hailo->new (
@@ -147,6 +150,18 @@ my $parse_message = sub {
 	# Если $m->{misc}->{answer} не существует, то проставим его как 1, предполагаем, что по-умолчанию ответ от нас
 	# всё-таки ожидают. Если что - уточним ниже.
 	if (defined $m->{misc}) {
+		unless (defined $m->{misc}->{fwd_cnt}) {
+			$m->{misc}->{fwd_cnt} = 1;
+		} else {
+			if ($m->{misc}->{fwd_cnt} > $fwd_cnt) {
+				$log->error ('Forward loop detected, discarding message.');
+				$log->debug (Dumper $m);
+				return;
+			} else {
+				$m->{misc}->{fwd_cnt}++;
+			}
+		}
+
 		unless (defined $m->{misc}->{answer}) {
 			$m->{misc}->{answer} = 1;
 		}
@@ -251,17 +266,35 @@ my $parse_message = sub {
 		}
 	} else {
 		# Пока что нам нечего ответить, известных фраз не нашлось. Ищем дальше, на сей раз фразы, зависящие от режима
-		# общения - приватного ли публичного.
+		# общения - приватного или публичного.
 		if ($m->{mode} eq 'private') {
-			$phrase =~ s/^\s*(вот\s+)?скажи(\s*мне)?\s*//gui;
-			$phrase =~ s/\s*(,)?\s*а\s*\?$/?/gui;
+			# Если указанной в unless-е строки во фразе нету, то можно поискать другие приватные фразы
+			unless ($phrase =~ s/^\s*(вот\s+)?скажи(\s*мне)?\s*//gui) {
+				if ($phrase =~ /покажи +(сиськи|сиси|титьки)\s*$/ui) {
+					$send_to = 'webapp';
+					$reply = '!boobs';
+				} elsif ($phrase =~ /show +(titts|tities|boobs)\s*$/i) {
+					$send_to = 'webapp';
+					$reply = '!boobs';
+				} elsif ($phrase =~ /покажи +(попку|попу) *$/ui) {
+					$send_to = 'webapp';
+					$reply = '!ass';
+				} elsif ($phrase =~ /show +(ass|butt|butty) *$/i) {
+					$send_to = 'webapp';
+					$reply = '!ass';
+				}
+			}
 
-			if ($phrase =~ /^\s*кто\s+все\s+эти\s+люди\s*\?\s*$/ui) {
-				$reply = 'Какие "люди"? Мы здесь вдвоём, только ты и я.';
-			} elsif ($phrase =~ /^\s*кто\s+я\s*\?\s*$/ui) {
-				$reply = 'Где?';
-			} elsif ($phrase =~ /^\s*кто\s+(здесь|тут)\s*\?\s*$/ui) {
-				$reply = 'Ты да я, да мы с тобой.';
+			unless (defined $reply) {
+				$phrase =~ s/\s*(,)?\s*а\s*\?$/?/gui;
+
+				if ($phrase =~ /^\s*кто\s+все\s+эти\s+люди\s*\?\s*$/ui) {
+					$reply = 'Какие "люди"? Мы здесь вдвоём, только ты и я.';
+				} elsif ($phrase =~ /^\s*кто\s+я\s*\?\s*$/ui) {
+					$reply = 'Где?';
+				} elsif ($phrase =~ /^\s*кто\s+(здесь|тут)\s*\?\s*$/ui) {
+					$reply = 'Ты да я, да мы с тобой.';
+				}
 			}
 
 			# TODO: дописать запрос в webapp, для easter egg-ов, либо делать это на уровне aleesa-misc
@@ -310,7 +343,13 @@ my $parse_message = sub {
 			# Пытаемся что-то генерировать, если фраза длиннее 3-х букв
 			if (length ($m->{message}) > 3) {
 				# Lazy brain init
-				if (brains ($chatid, 1)) {
+				my $telegram = 0;
+
+				if ($m->{plugin} eq 'telegram') {
+					$telegram = 1;
+				}
+
+				if (brains ($chatid, $telegram)) {
 					$reply = $hailo->{$chatid}->learn_reply ($m->{message});
 
 					# Если из реактора вернулся undef выдаём "общую" фразу из словаря
@@ -342,7 +381,13 @@ my $parse_message = sub {
 		} else {
 			# пытаемся что-то запоминать, если фраза длиннее 3-х букв
 			if (length ($m->{message}) > 3) {
-				if (brains ($chatid, 1)) {
+				my $telegram = 0;
+
+				if ($m->{plugin} eq 'telegram') {
+					$telegram = 1;
+				}
+
+				if (brains ($chatid, $telegram)) {
 					$hailo->{$chatid}->learn ($m->{message});
 				}
 			}
