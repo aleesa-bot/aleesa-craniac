@@ -1,6 +1,6 @@
 package Craniac;
 # Предполагается, что craniac - это "маршрут по-умолчанию". То есть сюда попадают все фразы, которые не были распознаны
-# aleesa-misc как команды.
+# aleesa-misc как команды. В том числе и некоторые команды (но по идее это так и задумано).
 
 # Основная задача мозгов - распознать, требуется ли ответ и обработать фразу.
 # Соответсвенно, мы предполагаем, что фразы делятся на 2 типа:
@@ -61,6 +61,8 @@ if (defined $logfile) {
 
 my $hailo;
 
+# Несколько фраз общего характера, используемые как универсальный ответ, когда ответить нечего (по тем или иным
+# причинам) или ответ не будет достаточно вменяемым (слишком похож на фразу, на которую отвечаем)
 sub RandomCommonPhrase () {
 	my @myphrase = (
 		'Так, блядь...',
@@ -104,6 +106,7 @@ sub fmatch (@) {
 	}
 }
 
+# Ленивая инициализация мозга. Создаём/открываем мозг только если нам надо "подумать" а не на каждую входящую фразу.
 sub brains (@) {
 	my $chatid = shift;
 	my $telegram = shift // 0;
@@ -112,7 +115,7 @@ sub brains (@) {
 		my $cid = $chatid;
 		my $brainname;
 
-		# Костыль, чтобы не портировать данные из телеграммных мозгов
+		# Костыль, чтобы не портировать данные из телеграммных мозгов и не заниматься переименованием
 		unless ($telegram) {
 			$cid = utf2sha1 ($chatid);
 			$cid =~ s/\//-/xmsg;
@@ -129,9 +132,9 @@ sub brains (@) {
 		};
 
 		if (defined $hailo->{$chatid}) {
-			$log->info (sprintf 'Lazy init brain: %s', $brainname);
+			$log->info (sprintf '[INFO] Lazy init brain: %s', $brainname);
 		} else {
-			$log->warn ($EVAL_ERROR);
+			$log->error ("[ERROR] $EVAL_ERROR");
 			return 0;
 		}
 	}
@@ -156,7 +159,7 @@ my $parse_message = sub {
 			$m->{misc}->{fwd_cnt} = 1;
 		} else {
 			if ($m->{misc}->{fwd_cnt} > $fwd_cnt) {
-				$log->error ('Forward loop detected, discarding message.');
+				$log->error ('[ERROR] Forward loop detected, discarding message.');
 				$log->debug (Dumper $m);
 				return;
 			} else {
@@ -346,13 +349,13 @@ my $parse_message = sub {
 		if ($m->{misc}->{answer}) {
 			# Пытаемся что-то генерировать, если фраза длиннее 3-х букв
 			if (length ($m->{message}) > 3) {
-				# Lazy brain init
 				my $telegram = 0;
 
 				if ($m->{plugin} eq 'telegram') {
 					$telegram = 1;
 				}
 
+				# Lazy brain init
 				if (brains ($chatid, $telegram)) {
 					$reply = $hailo->{$chatid}->learn_reply ($m->{message});
 

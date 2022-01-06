@@ -19,4 +19,4 @@ requires 'POSIX',                '0';
 requires 'Protocol::Redis::XS',  '0';
 requires 'Text::Fuzzy',          '==0.29';
 requires 'utf8',                 '0';
-requires 'version',              '0';
+requires 'version',              '==0.9929';

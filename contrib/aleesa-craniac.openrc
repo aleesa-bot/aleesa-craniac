@@ -1,0 +1,11 @@
+#!/sbin/openrc-run
+
+name="$SVCNAME"
+command="/var/lib/$SVCNAME/bin/$SVCNAME"
+pidfile="/var/run/$SVCNAME/$SVCNAME.pid"
+
+depend() {
+	need net redis
+	use dns
+	after redis
+}

@@ -19,6 +19,9 @@ use version; our $VERSION = qw (1.0);
 use Exporter qw (import);
 our @EXPORT_OK = qw (Train Lat);
 
+# В нашем случае среднее количество слов в фразе равно 3, поэтому ставим 2 :)
+my $brain_order = 2;
+
 my $c = LoadConf ();
 my $brain = $c->{lat}->{brain};
 my $srcfile = $c->{lat}->{src};
@@ -49,8 +52,7 @@ sub Train () {
 
 	my $lat = Hailo->new (
 		brain => $brain,
-		# В нашем случае среднее количество слов в фразе равно 3
-		order => 2
+		order => $brain_order
 	);
 
 	$lat->train ($srcfile);
@@ -76,8 +78,7 @@ sub Lat () {
 
 	my $lat = Hailo->new (
 		brain => $brain,
-		# В нашем случае среднее количество слов в фразе равно 3
-		order => 2,
+		order => $brain_order,
 		save_on_exit => 0
 	);
 

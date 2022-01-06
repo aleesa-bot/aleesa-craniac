@@ -1,4 +1,5 @@
 #!/usr/bin/perl
+# Наполняет отдельный "мозг" с бредом латинскими выражениями
 
 use 5.018;
 use strict;
@@ -10,7 +11,7 @@ use version; our $VERSION = qw (1.0);
 
 my $workdir;
 
-# before we run, change working dir
+# До фактического запуска логики программы, сменим рабочий каталог, чтобы подцепить либы
 BEGIN {
 	use Cwd qw (chdir abs_path);
 	my @CWD = split /\//xms, abs_path ($PROGRAM_NAME);
