@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 # Наполняет отдельный "мозг" с бредом латинскими выражениями
 
-use 5.018;
+use 5.018; ## no critic (ProhibitImplicitImport)
 use strict;
 use warnings;
 use utf8;

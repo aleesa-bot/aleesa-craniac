@@ -1,7 +1,7 @@
 package Craniac::Lat;
 # Крылатые латинские выражения спёрты с https://ru.wikipedia.org/wiki/Список_крылатых_латинских_выражений
 
-use 5.018;
+use 5.018; ## no critic (ProhibitImplicitImport)
 use strict;
 use warnings;
 use utf8;
@@ -10,8 +10,8 @@ use English qw ( -no_match_vars );
 use Carp qw (cluck);
 use File::Basename qw (dirname);
 use File::Path qw (make_path);
-use Hailo;
-use Mojo::Log;
+use Hailo ();
+use Log::Any qw ($log);
 
 use Conf qw (LoadConf);
 
@@ -25,20 +25,6 @@ my $brain_order = 2;
 my $c = LoadConf ();
 my $brain = $c->{lat}->{brain};
 my $srcfile = $c->{lat}->{src};
-my $loglevel = $c->{'loglevel'} // 'info';
-my $log;
-
-if (defined $c->{'log'}) {
-	$logfile = $c->{'log'};
-} elsif (defined $c->{'debug_log'}) {
-	$logfile = $c->{'debug_log'};
-}
-
-if (defined $logfile) {
-	$log = Mojo::Log->new (path => $logfile, level => $loglevel);
-} else {
-	$log = Mojo::Log->new (path => '/dev/null', level => 'fatal');
-}
 
 sub Train () {
 	my $braindir = dirname $brain;
@@ -52,7 +38,7 @@ sub Train () {
 
 	my $lat = Hailo->new (
 		brain => $brain,
-		order => $brain_order
+		order => $brain_order,
 	);
 
 	$lat->train ($srcfile);
@@ -71,7 +57,7 @@ sub Lat () {
 		return '';
 	}
 
-	unless (-f $brain) {
+	unless (-e $brain) {
 		$log->error ("[ERROR] No lat module data: $brain is absent! Train lat first.");
 		return '';
 	}
@@ -79,7 +65,7 @@ sub Lat () {
 	my $lat = Hailo->new (
 		brain => $brain,
 		order => $brain_order,
-		save_on_exit => 0
+		save_on_exit => 0,
 	);
 
 	return $lat->reply ();

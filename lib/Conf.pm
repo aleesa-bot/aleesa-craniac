@@ -1,14 +1,13 @@
 package Conf;
-# loads config
+# Загружает конфиг файл
 
-use 5.018;
+use 5.018; ## no critic (ProhibitImplicitImport)
 use strict;
 use warnings;
 use utf8;
 use open qw (:std :utf8);
 use English qw ( -no_match_vars );
-use Encode qw (encode decode);
-use JSON::XS;
+use JSON::XS ();
 
 use version; our $VERSION = qw (1.0);
 use Exporter qw (import);
@@ -16,15 +15,24 @@ our @EXPORT_OK = qw (LoadConf);
 
 sub LoadConf {
 	my $c = 'data/config.json';
-	open my $CH, '<', $c or die "[FATAL] No conf at $c: $OS_ERROR\n";
-	my $json;
+	my $CH;
+
+	unless (open $CH, '<', $c) {
+		die "[FATAL] No conf at $c: $OS_ERROR\n";
+	}
+
 	my $len = (stat $c) [7];
+	my $json;
 	my $readlen = read $CH, $json, $len;
-	$json = encode 'UTF-8', $json;
 
 	unless ($readlen) {
 		close $CH;                                   ## no critic (InputOutput::RequireCheckedSyscalls
 		die "[FATAL] Unable to read $c: $OS_ERROR\n";
+	}
+
+	if ($readlen != $len) {
+		close $CH;                                   ## no critic (InputOutput::RequireCheckedSyscalls
+		die "[FATAL] File $c is $len bytes on disk, but we read only $readlen bytes\n";
 	}
 
 	close $CH;                                       ## no critic (InputOutput::RequireCheckedSyscalls

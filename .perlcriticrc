@@ -94,3 +94,25 @@ lib_sections    = NAME | VERSION | DESCRIPTION | AUTHOR | LICENSE AND COPYRIGHT
 # Have to use it, so fuckoff
 
 [-Variables::ProhibitPackageVars]
+
+[-CodeLayout::RequireASCII]
+
+[-Editor::RequireEmacsFileVariables]
+
+[-TooMuchCode::ProhibitUnnecessaryUTF8Pragma]
+
+[-TooMuchCode::ProhibitDuplicateLiteral]
+
+[-ErrorHandling::RequireUseOfExceptions]
+
+[-ValuesAndExpressions::RequireConstantOnLeftSideOfEquality]
+[-Lax::RequireConstantOnLeftSideOfEquality::ExceptEq]
+
+[-Lax::ProhibitEmptyQuotes::ExceptAsFallback]
+
+[-CodeLayout::RequireUseUTF8]
+
+[ValuesAndExpressions::RestrictLongStrings]
+max_length = 256
+
+[-Miscellanea::ProhibitUnrestrictedNoCritic]
