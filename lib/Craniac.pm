@@ -252,8 +252,8 @@ my $parse_message = sub {
 			$self->json ($send_to)->notify (
 				$send_to => {
 					from    => 'craniac',
-					userid  => $userid,
-					chatid  => $chatid,
+					userid  => 0 + $userid,
+					chatid  => 0 + $chatid,
 					plugin  => $m->{plugin},
 					message => $reply,
 				},
@@ -297,8 +297,8 @@ my $parse_message = sub {
 				$self->json ($send_to)->notify (
 					$send_to => {
 						from    => 'craniac',
-						userid  => $userid,
-						chatid  => $chatid,
+						userid  => 0 + $userid,
+						chatid  => 0 + $chatid,
 						plugin  => $m->{plugin},
 						message => $reply,
 					},
@@ -322,8 +322,8 @@ my $parse_message = sub {
 				$self->json ($send_to)->notify (
 					$send_to => {
 						from    => 'craniac',
-						userid  => $userid,
-						chatid  => $chatid,
+						userid  => 0 + $userid,
+						chatid  => 0 + $chatid,
 						plugin  => $m->{plugin},
 						message => $reply,
 					},
@@ -365,8 +365,8 @@ my $parse_message = sub {
 					$self->json ($send_to)->notify (
 						$send_to => {
 							from    => 'craniac',
-							userid  => $userid,
-							chatid  => $chatid,
+							userid  => 0 + $userid,
+							chatid  => 0 + $chatid,
 							plugin  => $m->{plugin},
 							message => $reply,
 						},
