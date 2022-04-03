@@ -1,4 +1,19 @@
 #!/usr/bin/env perlcritic
+
+# Задействованные модули критика:
+#
+# Perl::Critic::More
+# Perl::Critic::Pulp
+# Perl::Critic::TooMuchCode
+# Perl::Critic::Lax
+# Perl::Critic::CognitiveComplexity
+# Perl::Critic::Policy::CompileTime
+# Perl::Critic::Policy::ProhibitImplicitImport
+# Perl::Critic::Policy::Dynamic::NoIndirect
+# Perl::Critic::StricterSubs
+# Perl::Critic::Policy::ProhibitImplicitImport
+# Perl::Critic::Policy::CodeLayout::RequireUseUTF8
+
 severity    = 5
 verbose     = 8
 
