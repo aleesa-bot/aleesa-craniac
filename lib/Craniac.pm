@@ -173,43 +173,45 @@ my $parse_message = sub {
 		$m->{misc}->{bot_nick} = 'aleesa';
 	}
 
+	my $csign = $m->{misc}->{csign};
+
 	if (defined $m->{misc}->{bot_nick}) {
 		# Если нам сообщили ник бота, попробуем вымарать его из оригинального текста сообщения, в большинстве случаев он
 		# нам не интересн.
 		$phrase =~ s/\s*\,?\s*($m->{misc}->{bot_nick})\s*\,?\s*/ /gui;
 
 		# В ключевых фразах можно обратиться с некоторыми командами к боту по нику, не используя символ команды
-		if ($m->{message} =~ /^\s*\Q;m->{misc}->{bot_nick}\E\s*;/ui) {
+		if ($m->{message} =~ /^\s*\Q$m->{misc}->{bot_nick}\E\s*$/ui) {
 			$reply = 'Чего?';
-		} elsif ($m->{message} =~ /^(\Q$m->{misc}->{csign}\E|\Q$m->{misc}->{bot_nick}\E\s*\,?\s+)ping\.?\s*$/i) {
+		} elsif ($m->{message} =~ /^(\Q$csign\E|\Q$m->{misc}->{bot_nick}\E\s*\,?\s+)ping\.?\s*$/i) {
 			$reply = 'Pong.';
-		} elsif ($m->{message} =~ /^(\Q$m->{misc}->{csign}\E|\Q$m->{misc}->{bot_nick}\E\s*\,?\s+)pong\.?\s*$/i) {
+		} elsif ($m->{message} =~ /^(\Q$csign\E|\Q$m->{misc}->{bot_nick}\E\s*\,?\s+)pong\.?\s*$/i) {
 			$reply = 'Wat?';
-		} elsif ($m->{message} =~ /^(\Q$m->{misc}->{csign}\E|\Q$m->{misc}->{bot_nick}\E\s*\,?\s+)пин(г|х)\.?\s*$/ui) {
+		} elsif ($m->{message} =~ /^(\Q$csign\E|\Q$m->{misc}->{bot_nick}\E\s*\,?\s+)пин(г|х)\.?\s*$/ui) {
 			$reply = 'Понг.';
-		} elsif ($m->{message} =~ /^(\Q$m->{misc}->{csign}\E|\Q$m->{misc}->{bot_nick}\E\s*\,?\s+)пон(г|х)\.?\s*$/ui) {
+		} elsif ($m->{message} =~ /^(\Q$csign\E|\Q$m->{misc}->{bot_nick}\E\s*\,?\s+)пон(г|х)\.?\s*$/ui) {
 			$reply = 'Шта?';
-		} elsif ($m->{message} =~ /^(\Q$m->{misc}->{csign}\E|\Q$m->{misc}->{bot_nick}\E\s*\,?\s+)(хэлп|halp)\s*$/ui) {
+		} elsif ($m->{message} =~ /^(\Q$csign\E|\Q$m->{misc}->{bot_nick}\E\s*\,?\s+)(хэлп|halp)\s*$/ui) {
 			$reply = 'HALP!!!11';
 		}
 	} else {
 		# Если нам не сообщили ник бота, то ищем команды, используя символ команды
-		if ($m->{message} =~ /^\Q$m->{misc}->{csign}\Eping\.?\s*$/ui) {
+		if ($m->{message} =~ /^\Q$csign\Eping\.?\s*$/ui) {
 			$reply = 'Pong.';
-		} elsif ($m->{message} =~ /^\Q$m->{misc}->{csign}\Epong\.?\s*$/i) {
+		} elsif ($m->{message} =~ /^\Q$csign\Epong\.?\s*$/i) {
 			$reply = 'Wat?';
-		} elsif ($m->{message} =~ /^\Q$m->{misc}->{csign}\Eпин(г|х)\.?\s*$/ui) {
+		} elsif ($m->{message} =~ /^\Q$csign\Eпин(г|х)\.?\s*$/ui) {
 			$reply = 'Понг.';
-		} elsif ($m->{message} =~ /^\Q$m->{misc}->{csign}\Eпон(г|х)\.?\s*$/ui) {
+		} elsif ($m->{message} =~ /^\Q$csign\Eпон(г|х)\.?\s*$/ui) {
 			$reply = 'Шта?';
-		} elsif ($m->{message} =~ /^\Q$m->{misc}->{csign}\E(хэлп|halp)\s*$/ui) {
+		} elsif ($m->{message} =~ /^\Q$csign\E(хэлп|halp)\s*$/ui) {
 			$reply = 'HALP!!!11';
 		}
 	}
 
 	# Поищем в тексте входящего сообщения команды общего плана, с символом команды.
 	unless (defined $reply) {
- 		if ($m->{message} =~ /^\Q$m->{misc}->{csign}\E(kde|кде)\s*$/ui) {
+		if ($m->{message} =~ /^\Q$csign\E(kde|кде)\s*$/ui) {
 			my @phrases = (
 				'Нет, я не буду поднимать вам плазму.',
 				'Повторяйте эту мантру по утрам не менее 5 раз: "Плазма не падает." И, возможно, она перестанет у вас падать.',
@@ -218,7 +220,7 @@ my $parse_message = sub {
 			);
 
 			$reply = $phrases[irand ($#phrases + 1)];
-		} elsif ($m->{message} =~ /^\Q$m->{misc}->{csign}\E(coin|монетка)$/ui) {
+		} elsif ($m->{message} =~ /^\Q$csign\E(coin|монетка)$/ui) {
 			if (rand (101) < 0.016) {
 				$reply = 'ребро';
 			} else {
@@ -236,11 +238,11 @@ my $parse_message = sub {
 					}
 				}
 			}
-		} elsif ($m->{message} =~ /^\Q$m->{misc}->{csign}\E(roll|dice|кости')$/ui) {
+		} elsif ($m->{message} =~ /^\Q$csign\E(roll|dice|кости)$/ui) {
 			$reply = sprintf 'На первой кости выпало %d, а на второй — %d.', irand (6) + 1, irand (6) + 1;
-		} elsif ($m->{message} =~ /^\Q$m->{misc}->{csign}\E(ver|version|версия)$/ui) {
+		} elsif ($m->{message} =~ /^\Q$csign\E(ver|version|версия)$/ui) {
 			$reply = 'Версия:  Четыре.Технологическое_превью';
-		} elsif ($m->{message} =~ /^\Q$m->{misc}->{csign}\E(lat|лат)\s*$/ui) {
+		} elsif ($m->{message} =~ /^\Q$csign\E(lat|лат)\s*$/ui) {
 			$reply = Lat ();
 		}
 	}
