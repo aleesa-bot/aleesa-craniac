@@ -5,5 +5,7 @@ _Deparsed_XSubs.pm
 *.pid
 *.log
 data/cache/**
+data/brains/**
+data/lat/**
 data/config.json
 vendor_perl/**
