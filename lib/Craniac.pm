@@ -160,22 +160,21 @@ my $parse_message = sub {
 		}
 
 		unless (defined $m->{misc}->{csign}) {
-			$m->{misc}->{csign} = '!';
+			$m->{misc}->{csign} = $c->{csign};
 		}
 
-		# TODO: не проставлять дефолтный ник!
 		unless (defined $m->{misc}->{bot_nick}) {
-			$m->{misc}->{bot_nick} = 'aleesa';
+			$m->{misc}->{bot_nick} = '';
 		}
 	} else {
 		$m->{misc}->{answer} = 1;
-		$m->{misc}->{csign} = '!';
-		$m->{misc}->{bot_nick} = 'aleesa';
+		$m->{misc}->{csign} = $c->{csign};
+		$m->{misc}->{bot_nick} = '';
 	}
 
 	my $csign = $m->{misc}->{csign};
 
-	if (defined $m->{misc}->{bot_nick}) {
+	if ($m->{misc}->{bot_nick} ne '') {
 		# Если нам сообщили ник бота, попробуем вымарать его из оригинального текста сообщения, в большинстве случаев он
 		# нам не интересн.
 		$phrase =~ s/\s*\,?\s*($m->{misc}->{bot_nick})\s*\,?\s*/ /gui;

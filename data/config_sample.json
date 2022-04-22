@@ -25,7 +25,10 @@
     # maximal amount of message forwardings, to avoid endless loops
     "forwards_max" : 5,
 
-    "lat" : {
+    # Command prefix aka command sign
+    "csign" : "!",
+
+"lat" : {
         "brain" : "data/lat/brain.sqlite",
         "src" : "data/lat.txt"
     }
