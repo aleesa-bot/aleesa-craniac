@@ -145,39 +145,54 @@ my $parse_message = sub {
 	my $phrase  = $m->{message};
 	my $reply;
 
-	# Если $m->{misc}->{answer} не существует, то проставим его как 1, предполагаем, что по-умолчанию ответ от нас
-	# всё-таки ожидают. Если что - уточним ниже.
-	if (defined $m->{misc}) {
-		unless (defined $m->{misc}->{fwd_cnt}) {
-			$m->{misc}->{fwd_cnt} = 1;
-		} else {
-			if ($m->{misc}->{fwd_cnt} > $fwd_cnt) {
-				$log->error ('[ERROR] Forward loop detected, discarding message.');
-				$log->debug (Dumper $m);
-				return;
-			} else {
-				$m->{misc}->{fwd_cnt}++;
+	if (defined $answer->{misc}) {
+			unless (defined $answer->{misc}->{answer}) {
+					$answer->{misc}->{answer} = 1;
 			}
-		}
 
-		unless (defined $m->{misc}->{answer}) {
-			$m->{misc}->{answer} = 1;
-		}
+			unless (defined $answer->{misc}->{bot_nick}) {
+					$answer->{misc}->{bot_nick} = '';
+			}
 
-		unless (defined $m->{misc}->{csign}) {
-			$m->{misc}->{csign} = $c->{csign};
-		}
+			unless (defined $answer->{misc}->{csign}) {
+					$answer->{misc}->{csign} = $c->{csign};
+			}
 
-		unless (defined $m->{misc}->{bot_nick}) {
-			$m->{misc}->{bot_nick} = '';
-		}
+			unless (defined $answer->{misc}->{fwd_cnt}) {
+					$answer->{misc}->{fwd_cnt} = 1;
+			} else {
+					if ($answer->{misc}->{fwd_cnt} > $fwd_cnt) {
+							$log->error ('[ERROR] Forward loop detected, discarding message.');
+							$log->debug (Dumper $m);
+							return;
+					} else {
+							$answer->{misc}->{fwd_cnt}++;
+					}
+			}
+
+			unless (defined $answer->{misc}->{good_morning}) {
+					$answer->{misc}->{good_morning} = 0;
+			}
+
+			unless (defined $answer->{misc}->{msg_format}) {
+					$answer->{misc}->{msg_format} = 0;
+			}
+
+			unless (defined $answer->{misc}->{username}) {
+					$answer->{misc}->{username} = 'user';
+			}
 	} else {
-		$m->{misc}->{answer} = 1;
-		$m->{misc}->{csign} = $c->{csign};
-		$m->{misc}->{bot_nick} = '';
+			$answer->{misc}->{answer} = 1;
+			$answer->{misc}->{bot_nick} = '';
+			$answer->{misc}->{csign} = $c->{csign};
+			$answer->{misc}->{fwd_cnt} = 1;
+			$answer->{misc}->{good_morning} = 0;
+			$answer->{misc}->{msg_format} = 0;
+			$answer->{misc}->{username} = 'user';
 	}
 
-	my $csign = $m->{misc}->{csign};
+	my $csign = $answer->{misc}->{csign};
+	$answer->{message} = '';
 
 	if ($m->{misc}->{bot_nick} ne '') {
 		# Если нам сообщили ник бота, попробуем вымарать его из оригинального текста сообщения, в большинстве случаев он
