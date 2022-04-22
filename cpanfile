@@ -5,7 +5,8 @@ requires 'Cwd::utf8',            '==0.011';
 requires 'Data::Dumper',         '==2.183';
 requires 'Digest::SHA',          '==6.02';
 requires 'Encode',               '==3.16';
-requires 'English',              '==1.11';
+# Part of perl
+requires 'English',              '0';
 requires 'File::Basename',       '==2.85';
 requires 'File::Path',           '==2.18';
 requires 'File::Spec',           '==3.75';
@@ -16,7 +17,7 @@ requires 'Log::Any',             '==1.710';
 requires 'Log::Any::Adapter',    '==1.710';
 requires 'Log::Any::For::Std',   '==0.05';
 requires 'Math::Random::Secure', '==0.080001';
-requires 'Mojolicious',          '==9.22';
+requires 'Mojolicious',          '==9.24';
 # Part of Mojolicious
 requires 'Mojo::IOLoop',         '0';
 requires 'Mojo::IOLoop::Signal', '==0.003';
