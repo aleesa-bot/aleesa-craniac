@@ -17,6 +17,7 @@ use open qw (:std :utf8);
 use English qw ( -no_match_vars );
 
 # Модули для работы приложения
+use Clone qw (clone);
 use Data::Dumper qw (Dumper);
 use Digest::SHA qw (sha1_base64);
 use Encode qw (encode_utf8);
@@ -133,7 +134,11 @@ sub brains (@) {
 # Основной парсер
 my $parse_message = sub {
 	my $self = shift;
-	my $m = shift;
+	my $m    = shift;
+
+	my $answer = clone ($m);
+	$answer->{from} = 'craniac';
+
 	my $send_to = $m->{plugin};
 	my $chatid  = $m->{chatid};
 	my $userid  = $m->{userid};
@@ -250,14 +255,10 @@ my $parse_message = sub {
 	# общения - публичного или приватного.
 	if (defined $reply) {
 		if ($m->{misc}->{answer}) {
+			$answer->{message} = $reply;
+
 			$self->json ($send_to)->notify (
-				$send_to => {
-					from    => 'craniac',
-					userid  => "$userid",
-					chatid  => "$chatid",
-					plugin  => $m->{plugin},
-					message => $reply,
-				},
+				$send_to => = $answer,
 			);
 		}
 	} else {
@@ -295,14 +296,10 @@ my $parse_message = sub {
 
 			# TODO: дописать запрос в webapp, для easter egg-ов, либо делать это на уровне aleesa-misc
 			if (defined ($reply) && $m->{misc}->{answer}) {
+				$answer->{message} = $reply;
+
 				$self->json ($send_to)->notify (
-					$send_to => {
-						from    => 'craniac',
-						userid  => "$userid",
-						chatid  => "$chatid",
-						plugin  => $m->{plugin},
-						message => $reply,
-					},
+					$send_to => $answer,
 				);
 
 				return;
@@ -320,14 +317,10 @@ my $parse_message = sub {
 			}
 
 			if (defined ($reply) && $m->{misc}->{answer}) {
+				$answer->{message} = $reply;
+
 				$self->json ($send_to)->notify (
-					$send_to => {
-						from    => 'craniac',
-						userid  => "$userid",
-						chatid  => "$chatid",
-						plugin  => $m->{plugin},
-						message => $reply,
-					},
+					$send_to => $answer,
 				);
 
 				return;
@@ -363,14 +356,10 @@ my $parse_message = sub {
 						}
 					}
 
+					$answer->{message} = $reply;
+
 					$self->json ($send_to)->notify (
-						$send_to => {
-							from    => 'craniac',
-							userid  => "$userid",
-							chatid  => "$chatid",
-							plugin  => $m->{plugin},
-							message => $reply,
-						},
+						$send_to => $answer,
 					);
 				}
 			}
