@@ -273,7 +273,7 @@ my $parse_message = sub {
 			$answer->{message} = $reply;
 
 			$self->json ($send_to)->notify (
-				$send_to => = $answer,
+				$send_to => $answer,
 			);
 		}
 	} else {
