@@ -19,8 +19,7 @@ use English qw ( -no_match_vars );
 # Модули для работы приложения
 use Clone qw (clone);
 use Data::Dumper qw (Dumper);
-use Digest::SHA qw (sha1_base64);
-use Encode qw (encode_utf8);
+use Digest::SHA qw (sha256_hex);
 use File::Spec ();
 use Hailo ();
 use Log::Any qw ($log);
@@ -40,7 +39,6 @@ use Exporter qw (import);
 our @EXPORT_OK = qw (RunCraniac);
 
 sub RandomCommonPhrase ();
-sub utf2sha1 ($);
 sub fmatch (@);
 sub brains (@);
 sub RunCraniac ();
@@ -69,17 +67,6 @@ sub RandomCommonPhrase () {
 	return $myphrase[irand ($#myphrase + 1)];
 }
 
-sub utf2sha1 ($) {
-	my $string = shift;
-
-	if ($string eq '') {
-		return sha1_base64 '';
-	}
-
-	my $bytes = encode_utf8 $string;
-	return sha1_base64 $bytes;
-}
-
 sub fmatch (@) {
 	my $srcphrase = shift;
 	my $answer = shift;
@@ -97,30 +84,27 @@ sub fmatch (@) {
 
 # Ленивая инициализация мозга. Создаём/открываем мозг только если нам надо "подумать" а не на каждую входящую фразу.
 sub brains (@) {
-	my $chatid = shift;
-	my $telegram = shift // 0;
+	my $plugin = shift;
+	my $cid = shift;
 
-	unless (defined $hailo->{$chatid}) {
-		my $cid = $chatid;
+	unless (defined $hailo->{$cid}) {
 		my $brainname;
 
 		# Костыль, чтобы не портировать данные из телеграммных мозгов и не заниматься переименованием
-		unless ($telegram) {
-			$cid = utf2sha1 ($chatid);
-			$cid =~ s/\//-/xmsg;
-			$brainname = sprintf '%s/%s.sqlite', $c->{braindir}, $cid;
-		} else {
+		if ($plugin eq 'telegram') {
 			$brainname = sprintf '%s/%s.brain.sqlite', $c->{braindir}, $cid;
+		} else {
+			$brainname = sprintf '%s/%s.sqlite', $c->{braindir}, $cid;
 		}
 
-		$hailo->{$chatid} = eval {
+		$hailo->{$cid} = eval {
 			Hailo->new (
 				brain => $brainname,
 				order => 3,
 			);
 		};
 
-		if (defined $hailo->{$chatid}) {
+		if (defined $hailo->{$cid}) {
 			$log->info (sprintf '[INFO] Lazy init brain: %s', $brainname);
 		} else {
 			$log->error ("[ERROR] $EVAL_ERROR");
@@ -358,19 +342,20 @@ my $parse_message = sub {
 		}
 
 		# Попадаем сюда только если входящая фраза не распознана ранее как ключевая. 
+		my $cid;
+
+		if ($m->{plugin} eq 'telegram') {
+			$cid = $chatid;
+		} else {
+			$cid = sha256_hex (sprintf '%s/%s', $m->{plugin}, $chatid);
+		}
+
 		if ($m->{misc}->{answer}) {
 			# Пытаемся что-то генерировать, если фраза длиннее 3-х букв.
 			if (length ($m->{message}) > 3) {
-				my $telegram = 0;
-
-				# Костыль для совместимости со старым наименованием "мозгов".
-				if ($m->{plugin} eq 'telegram') {
-					$telegram = 1;
-				}
-
 				# Lazy brain init
-				if (brains ($chatid, $telegram)) {
-					$reply = $hailo->{$chatid}->learn_reply ($m->{message});
+				if (brains ($m->{plugin}, $cid)) {
+					$reply = $hailo->{$cid}->learn_reply ($m->{message});
 
 					# Если из реактора вернулся undef выдаём "общую" фразу из словаря.
 					unless (defined $reply) {
@@ -397,14 +382,9 @@ my $parse_message = sub {
 		} else {
 			# Пытаемся что-то запоминать, если фраза длиннее 3-х букв
 			if (length ($m->{message}) > 3) {
-				my $telegram = 0;
-
-				if ($m->{plugin} eq 'telegram') {
-					$telegram = 1;
-				}
-
-				if (brains ($chatid, $telegram)) {
-					$hailo->{$chatid}->learn ($m->{message});
+				# Lazy brain init
+				if (brains ($m->{plugin}, $cid)) {
+					$hailo->{$cid}->learn ($m->{message});
 				}
 			}
 		}

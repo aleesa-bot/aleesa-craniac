@@ -5,7 +5,6 @@ requires 'Cwd',                  '==3.75';
 requires 'Cwd::utf8',            '==0.011';
 requires 'Data::Dumper',         '==2.183';
 requires 'Digest::SHA',          '==6.02';
-requires 'Encode',               '==3.16';
 # Part of perl
 requires 'English',              '0';
 requires 'File::Basename',       '==2.85';
