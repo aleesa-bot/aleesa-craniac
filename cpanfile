@@ -17,15 +17,13 @@ requires 'Log::Any',             '==1.710';
 requires 'Log::Any::Adapter',    '==1.710';
 requires 'Log::Any::For::Std',   '==0.05';
 requires 'Math::Random::Secure', '==0.080001';
-requires 'Mojolicious',          '==9.24';
+requires 'Mojolicious',          '==9.26';
 # Part of Mojolicious
 requires 'Mojo::IOLoop',         '0';
 requires 'Mojo::IOLoop::Signal', '==0.003';
-requires 'Mojo::Redis',          '==3.27';
+requires 'Mojo::Redis',          '==3.29';
 # Part of perl
 requires 'POSIX',                '0';
-# Buggy, latest version works, as pub-sub, but fails tests
-requires 'Protocol::Redis::XS',  '0';
 requires 'Text::Fuzzy',          '==0.29';
 # Part of perl
 requires 'utf8',                 '0';

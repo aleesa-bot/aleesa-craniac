@@ -25,8 +25,6 @@ use Hailo ();
 use Log::Any qw ($log);
 use Mojo::IOLoop ();
 use Mojo::IOLoop::Signal ();
-# Чтобы "уж точно" использовать hiredis-биндинги, загрузим этот модуль перед Mojo::Redis
-use Protocol::Redis::XS ();
 use Mojo::Redis ();
 use Math::Random::Secure qw (irand);
 use Text::Fuzzy qw (distance_edits);
