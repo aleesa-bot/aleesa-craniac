@@ -14,8 +14,6 @@
 # Perl::Critic::Policy::ProhibitImplicitImport
 # Perl::Critic::Policy::CodeLayout::RequireUseUTF8
 
-severity    = 5
-verbose     = 8
 
 # minorify some of warnings that are not really critical
 [-InputOutput::RequireCheckedClose]
@@ -131,3 +129,5 @@ lib_sections    = NAME | VERSION | DESCRIPTION | AUTHOR | LICENSE AND COPYRIGHT
 max_length = 256
 
 [-Miscellanea::ProhibitUnrestrictedNoCritic]
+
+[-RegularExpressions::ProhibitFixedStringMatches]
