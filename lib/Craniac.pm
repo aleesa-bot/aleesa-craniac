@@ -128,49 +128,49 @@ my $parse_message = sub {
 	my $reply;
 
 	if (defined $answer->{misc}) {
-			unless (defined $answer->{misc}->{answer}) {
-					$answer->{misc}->{answer} = 1;
-			}
-
-			unless (defined $answer->{misc}->{bot_nick}) {
-					$answer->{misc}->{bot_nick} = '';
-			}
-
-			unless (defined $answer->{misc}->{csign}) {
-					$answer->{misc}->{csign} = $c->{csign};
-			}
-
-			unless (defined $answer->{misc}->{fwd_cnt}) {
-					$answer->{misc}->{fwd_cnt} = 1;
-			} else {
-					if ($answer->{misc}->{fwd_cnt} > $fwd_cnt) {
-							$log->error ('[ERROR] Forward loop detected, discarding message.');
-							$log->debug (Dumper $m);
-							return;
-					} else {
-							$answer->{misc}->{fwd_cnt}++;
-					}
-			}
-
-			unless (defined $answer->{misc}->{good_morning}) {
-					$answer->{misc}->{good_morning} = 0;
-			}
-
-			unless (defined $answer->{misc}->{msg_format}) {
-					$answer->{misc}->{msg_format} = 0;
-			}
-
-			unless (defined $answer->{misc}->{username}) {
-					$answer->{misc}->{username} = 'user';
-			}
-	} else {
+		unless (defined $answer->{misc}->{answer}) {
 			$answer->{misc}->{answer} = 1;
+		}
+
+		unless (defined $answer->{misc}->{bot_nick}) {
 			$answer->{misc}->{bot_nick} = '';
+		}
+
+		unless (defined $answer->{misc}->{csign}) {
 			$answer->{misc}->{csign} = $c->{csign};
+		}
+
+		unless (defined $answer->{misc}->{fwd_cnt}) {
 			$answer->{misc}->{fwd_cnt} = 1;
+		} else {
+			if ($answer->{misc}->{fwd_cnt} > $fwd_cnt) {
+				$log->error ('[ERROR] Forward loop detected, discarding message.');
+				$log->debug (Dumper $m);
+				return;
+			} else {
+				$answer->{misc}->{fwd_cnt}++;
+			}
+		}
+
+		unless (defined $answer->{misc}->{good_morning}) {
 			$answer->{misc}->{good_morning} = 0;
+		}
+
+		unless (defined $answer->{misc}->{msg_format}) {
 			$answer->{misc}->{msg_format} = 0;
+		}
+
+		unless (defined $answer->{misc}->{username}) {
 			$answer->{misc}->{username} = 'user';
+		}
+	} else {
+		$answer->{misc}->{answer} = 1;
+		$answer->{misc}->{bot_nick} = '';
+		$answer->{misc}->{csign} = $c->{csign};
+		$answer->{misc}->{fwd_cnt} = 1;
+		$answer->{misc}->{good_morning} = 0;
+		$answer->{misc}->{msg_format} = 0;
+		$answer->{misc}->{username} = 'user';
 	}
 
 	my $csign = $answer->{misc}->{csign};
@@ -339,7 +339,7 @@ my $parse_message = sub {
 			}
 		}
 
-		# Попадаем сюда только если входящая фраза не распознана ранее как ключевая. 
+		# Попадаем сюда только если входящая фраза не распознана ранее как ключевая.
 		my $cid;
 
 		if ($m->{plugin} eq 'telegram') {
