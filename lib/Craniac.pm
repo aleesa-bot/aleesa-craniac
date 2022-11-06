@@ -42,7 +42,11 @@ sub brains (@);
 sub RunCraniac ();
 
 my $c = LoadConf ();
-my $fwd_cnt = $c->{'forward_max'} // 5;
+my $fwd_cnt = 5;
+
+if (defined $c->{'forward_max'}) {
+	$fwd_cnt = $c->{'forward_max'};
+}
 
 my $hailo;
 
