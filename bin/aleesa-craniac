@@ -47,7 +47,10 @@ my $runAsUid = $UID;
 
 my $piddir = '/var/run/' . basename (abs_path ($PROGRAM_NAME));
 my $C = LoadConf ();
-my $loglevel = $C->{'loglevel'} // 'notice';
+
+my $loglevel = 'notice';
+$loglevel = $C->{'loglevel'} if defined $C->{'loglevel'};
+
 my $logfile;
 
 if (defined $C->{'log'}) {
@@ -136,6 +139,7 @@ close $MYPID;                                        ## no critic (InputOutput::
 # подстраховка на случай ядерной войны.
 local $SIG{INT}  = \&__signal_handler;
 local $SIG{TERM} = \&__signal_handler;
+local $SIG{QUIT} = \&__signal_handler;
 
 # Поставим правильное имя процесса в proctitle
 $PROGRAM_NAME = abs_path $PROGRAM_NAME;              ## no critic (Variables::RequireLocalizedPunctuationVars)
@@ -152,7 +156,7 @@ exit 0;
 sub daemonize {
 	__fork ();
 	setsid ();
-	open STDIN, '<', File::Spec->devnull;                    ## no critic (InputOutput::RequireCheckedSyscalls, InputOutput::RequireCheckedOpen)
+	open STDIN, '<', File::Spec->devnull;            ## no critic (InputOutput::RequireCheckedSyscalls, InputOutput::RequireCheckedOpen)
 	__fork ();
 	umask 0;
 	return;

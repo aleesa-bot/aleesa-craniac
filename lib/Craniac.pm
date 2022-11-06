@@ -450,6 +450,7 @@ sub RunCraniac () {
 
 	Mojo::IOLoop::Signal->on (TERM => $__signal_handler);
 	Mojo::IOLoop::Signal->on (INT  => $__signal_handler);
+	Mojo::IOLoop::Signal->on (QUIT => $__signal_handler);
 
 	do { Mojo::IOLoop->start } until Mojo::IOLoop->is_running;
 	return;
